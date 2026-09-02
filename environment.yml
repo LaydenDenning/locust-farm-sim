@@ -1,0 +1,18 @@
+name: py3_pcse
+channels:
+  - defaults
+dependencies:
+  - requests
+  - python=3.10
+  - sqlalchemy[version='<2.0']
+  - ipython
+  - jupyter
+  - pandas
+  - pip:
+      - PCSE==6.0.13
+  - openpyxl
+  - sphinx
+  - sphinx_rtd_theme
+  - pyyaml
+  - matplotlib
+prefix: /home/layden/miniconda3/envs/py3_pcse

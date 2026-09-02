@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Conda
+.conda/
+conda-meta/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables / secrets
+.env
+*.env
+
+# Simulation outputs
+outputs/
+*.log
+
+# Large temporary data
+tmp/
+temp/
+cache/
+
+# Python testing
+.pytest_cache/
+.coverage
+htmlcov/
