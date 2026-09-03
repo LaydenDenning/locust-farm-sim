@@ -8,8 +8,12 @@ some future loss, but it never restores damage that has already accumulated.
 
 from __future__ import annotations
 
+import csv
+from collections import defaultdict
 from dataclasses import dataclass
 from math import isfinite
+from pathlib import Path
+from typing import Iterable, Mapping
 
 
 ISSUE_MECHANISMS = (
@@ -18,6 +22,22 @@ ISSUE_MECHANISMS = (
     "nutrient_deficit",
     "canopy_damage",
 )
+
+ISSUE_COLUMNS = (
+    "issue_id",
+    "mechanism",
+    "zone_id",
+    "onset_day",
+    "progression_per_day",
+    "max_severity",
+    "visibility_delay_days",
+    "visibility_scale",
+    "untreated_loss_fraction",
+)
+
+
+class IssueConfigError(ValueError):
+    """Raised when an issue CSV is invalid."""
 
 
 @dataclass(frozen=True)
@@ -125,6 +145,100 @@ class IssueOutcome:
     action_cost_per_ha: float
 
 
+def load_issue_scenarios(
+    path: str | Path,
+    *,
+    valid_zone_ids: Iterable[str],
+    campaign_days: int,
+) -> tuple[IssueScenario, ...]:
+    """Load one CSV row per issue-zone pair into grouped issue scenarios."""
+
+    if not isinstance(campaign_days, int) or isinstance(campaign_days, bool):
+        raise IssueConfigError("campaign_days must be a positive integer")
+    if campaign_days < 1:
+        raise IssueConfigError("campaign_days must be a positive integer")
+    source_path = Path(path)
+    try:
+        with source_path.open("r", encoding="utf-8-sig", newline="") as stream:
+            reader = csv.DictReader(stream)
+            if reader.fieldnames is None:
+                raise IssueConfigError(f"issue CSV {source_path} has no header")
+            missing = set(ISSUE_COLUMNS) - set(reader.fieldnames)
+            extra = set(reader.fieldnames) - set(ISSUE_COLUMNS)
+            if missing or extra:
+                raise IssueConfigError(
+                    "issue CSV columns do not match schema; "
+                    f"missing={sorted(missing)}, extra={sorted(extra)}"
+                )
+            rows = tuple(reader)
+    except OSError as exc:
+        raise IssueConfigError(f"unable to read issue CSV {source_path}: {exc}") from exc
+    if not rows:
+        raise IssueConfigError(f"issue CSV {source_path} contains no issues")
+
+    zones = set(valid_zone_ids)
+    definitions: dict[str, tuple[object, ...]] = {}
+    footprints: dict[str, list[str]] = defaultdict(list)
+    assigned_zones: set[str] = set()
+    for line_number, row in enumerate(rows, start=2):
+        context = f"issue CSV line {line_number}"
+        try:
+            issue_id = _row_text(row, "issue_id", context)
+            mechanism = _row_text(row, "mechanism", context)
+            zone_id = _row_text(row, "zone_id", context)
+            definition = (
+                mechanism,
+                _row_int(row, "onset_day", context),
+                _row_float(row, "progression_per_day", context),
+                _row_float(row, "max_severity", context),
+                _row_int(row, "visibility_delay_days", context),
+                _row_float(row, "visibility_scale", context),
+                _row_float(row, "untreated_loss_fraction", context),
+            )
+        except ValueError as exc:
+            if isinstance(exc, IssueConfigError):
+                raise
+            raise IssueConfigError(f"{context}: {exc}") from exc
+        if zone_id not in zones:
+            raise IssueConfigError(f"{issue_id}: unknown zone_id {zone_id!r}")
+        if zone_id in assigned_zones:
+            raise IssueConfigError(
+                f"{zone_id} has more than one issue; initial Phase 4 requires "
+                "non-overlapping issue footprints"
+            )
+        if issue_id in definitions and definitions[issue_id] != definition:
+            raise IssueConfigError(
+                f"{issue_id}: footprint rows must use identical issue settings"
+            )
+        definitions[issue_id] = definition
+        footprints[issue_id].append(zone_id)
+        assigned_zones.add(zone_id)
+
+    scenarios: list[IssueScenario] = []
+    for issue_id, definition in definitions.items():
+        mechanism, onset, progression, maximum, delay, scale, loss = definition
+        try:
+            scenario = IssueScenario(
+                issue_id=issue_id,
+                mechanism=str(mechanism),
+                zone_ids=tuple(footprints[issue_id]),
+                onset_day=int(onset),
+                progression_per_day=float(progression),
+                max_severity=float(maximum),
+                visibility_delay_days=int(delay),
+                visibility_scale=float(scale),
+                untreated_loss_fraction=float(loss),
+            )
+        except ValueError as exc:
+            raise IssueConfigError(str(exc)) from exc
+        if scenario.onset_day >= campaign_days:
+            raise IssueConfigError(
+                f"{scenario.issue_id}: onset_day must fall within the campaign"
+            )
+        scenarios.append(scenario)
+    return tuple(scenarios)
+
+
 def evaluate_intervention(
     issue: IssueScenario,
     *,
@@ -209,3 +323,26 @@ def _positive_fraction(value: float, name: str) -> None:
 def _unit_fraction(value: float, name: str) -> None:
     if not isfinite(value) or not 0 <= value <= 1:
         raise ValueError(f"{name} must be between 0 and 1")
+
+
+def _row_text(row: Mapping[str, str], key: str, context: str) -> str:
+    value = row.get(key)
+    if value is None or not value.strip():
+        raise IssueConfigError(f"{context}: {key} must not be empty")
+    return value.strip()
+
+
+def _row_int(row: Mapping[str, str], key: str, context: str) -> int:
+    value = _row_text(row, key, context)
+    try:
+        return int(value)
+    except ValueError as exc:
+        raise IssueConfigError(f"{context}: {key} must be an integer") from exc
+
+
+def _row_float(row: Mapping[str, str], key: str, context: str) -> float:
+    value = _row_text(row, key, context)
+    try:
+        return float(value)
+    except ValueError as exc:
+        raise IssueConfigError(f"{context}: {key} must be numeric") from exc

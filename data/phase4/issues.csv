@@ -1,0 +1,9 @@
+issue_id,mechanism,zone_id,onset_day,progression_per_day,max_severity,visibility_delay_days,visibility_scale,untreated_loss_fraction
+WATER_01,water_deficit,Z_R2_C3,45,0.04,0.80,2,0.90,0.25
+WATER_01,water_deficit,Z_R2_C4,45,0.04,0.80,2,0.90,0.25
+FLOOD_01,excess_water,Z_R3_C3,55,0.03,0.70,3,0.75,0.18
+FLOOD_01,excess_water,Z_R4_C3,55,0.03,0.70,3,0.75,0.18
+NUTRIENT_01,nutrient_deficit,Z_R3_C5,20,0.015,0.65,7,0.70,0.20
+NUTRIENT_01,nutrient_deficit,Z_R4_C5,20,0.015,0.65,7,0.70,0.20
+CANOPY_01,canopy_damage,Z_R4_C1,65,0.06,0.90,1,0.95,0.35
+CANOPY_01,canopy_damage,Z_R4_C2,65,0.06,0.90,1,0.95,0.35
