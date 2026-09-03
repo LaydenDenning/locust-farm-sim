@@ -1,0 +1,45 @@
+# Phase 3 virtual mission. The Mavic 4 Pro is a performance proxy only.
+phase1_config: phase1.yaml
+
+survey:
+  date: 2022-07-01
+  start_time: "10:00:00"
+  grounded: false
+
+aircraft:
+  name: DJI Mavic 4 Pro proxy
+  reference_mass_g: 1063
+  maximum_flight_time_minutes: 51
+  maximum_speed_m_s: 25
+  mapping_speed_m_s: 9
+  reserve_fraction: 0.25
+  # Provisional reduction for the unvalidated custom camera payload.
+  payload_endurance_factor: 0.85
+  altitude_m: 100
+  forward_overlap: 0.75
+  side_overlap: 0.70
+  turn_overhead_seconds: 12
+  takeoff_landing_overhead_seconds: 120
+  battery_change_seconds: 300
+
+cameras:
+  - name: Arducam B0483 OwlSight RGB
+    channel: rgb
+    width_px: 9248
+    height_px: 6944
+    horizontal_fov_deg: 68
+    vertical_fov_deg: 56
+    minimum_capture_interval_seconds: 1
+  - name: Arducam B0270 IMX477 with 850nm long-pass filter
+    channel: nir
+    width_px: 4056
+    height_px: 3040
+    horizontal_fov_deg: 65
+    vertical_fov_deg: 49
+    minimum_capture_interval_seconds: 1
+
+output:
+  directory: ../outputs/phase3
+  flight_lines_filename: flight_lines.csv
+  sortie_summary_filename: sortie_summary.csv
+  zone_coverage_filename: zone_coverage.csv
