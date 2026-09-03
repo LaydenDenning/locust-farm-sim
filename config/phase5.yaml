@@ -1,0 +1,12 @@
+# Phase 5 sensor-only anomaly classification.
+phase4_config: phase4.yaml
+
+detection:
+  anomaly_threshold: 0.30
+  maximum_uncertainty: 0.25
+  allowed_quality_flags: [good]
+
+output:
+  directory: ../outputs/phase5
+  detections_filename: detections.csv
+  survey_summary_filename: survey_summary.csv
