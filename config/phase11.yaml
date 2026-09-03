@@ -1,0 +1,26 @@
+# Phase 11 repeated paired sensitivity scenarios.
+phase10_config: phase10.yaml
+
+scenarios:
+  count: 100
+  seed: 20221101
+  no_issue_probability: 0.10
+  footprint_zone_count: [1, 4]
+  onset_day: [15, 75]
+  progression_per_day: [0.01, 0.06]
+  max_severity: [0.30, 0.90]
+  visibility_delay_days: [0, 10]
+  visibility_scale: [0.50, 1.00]
+  untreated_loss_fraction: [0.10, 0.40]
+  drone_grounding_probability: 0.10
+  scout_missed_probability: 0.05
+  efficacy_multiplier: [0.70, 1.15]
+  response_delay_days: [0, 3]
+  treatment_cost_multiplier: [0.75, 1.25]
+  twso_value_multiplier: [0.75, 1.25]
+
+output:
+  directory: ../outputs/phase11
+  scenario_results_filename: scenario_results.csv
+  distribution_summary_filename: distribution_summary.csv
+  sensitivity_filename: sensitivity.csv

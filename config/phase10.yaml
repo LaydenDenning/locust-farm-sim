@@ -1,0 +1,17 @@
+# Phase 10 provisional economics. These are synthetic sensitivity assumptions.
+phase9_config: phase9.yaml
+
+economics:
+  currency: USD
+  # TWSO remains a dry storage-organ biomass proxy, not marketed grain.
+  twso_proxy_value_per_tonne: 200.0
+  flight_cost_per_sortie: 20.0
+  processing_cost_per_1000_images: 2.0
+  scout_labor_cost_per_hour: 30.0
+  confirmation_cost_per_visit: 20.0
+  false_positive_action_cost_per_ha: 45.0
+
+output:
+  directory: ../outputs/phase10
+  zone_economics_filename: zone_economics.csv
+  strategy_summary_filename: strategy_summary.csv
