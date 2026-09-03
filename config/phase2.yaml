@@ -1,0 +1,11 @@
+# Controlled Phase 2 stress treatments compared with the unchanged Phase 1 farm.
+phase1_config: phase1.yaml
+stress_events_file: ../data/phase2/stress_events.csv
+
+output:
+  directory: ../outputs/phase2
+  daily_truth_filename: daily_truth.csv
+  zone_summary_filename: zone_summary.csv
+  stress_impacts_filename: stress_impacts.csv
+  trajectory_plot_filename: stress_trajectories.png
+  yield_impact_heatmap_filename: yield_impact_heatmap.png

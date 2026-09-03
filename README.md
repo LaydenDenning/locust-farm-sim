@@ -146,3 +146,56 @@ Phase 1 outputs are plausible, deterministic synthetic spatial trajectories.
 They are a ground-truth test bed, not field-calibrated agronomic predictions
 and not proof that a monitoring drone creates value. Stronger agronomic or
 economic claims require field observations and expert review in later phases.
+
+## Phase 2 controlled crop problems
+
+Phase 2 adds deterministic stress treatments to the Phase 1 truth farm. It
+runs every zone twice: once with the unchanged Phase 1 inputs (`baseline`) and
+once with the configured treatments (`stressed`). The paired results isolate
+the effect of each event from the farm's existing spatial differences.
+
+The initial event file is `data/phase2/stress_events.csv`. It uses one row per
+event-zone combination, so every footprint remains explicit and inspectable.
+Zones may have only one event in this first controlled experiment. Multiple
+rows can share an event ID only when their type, timing, duration, and severity
+are identical.
+
+| Stress type | Current synthetic implementation |
+|---|---|
+| `water_deficit` | Each active day, soil moisture is capped by moving the configured severity fraction from field capacity toward the wilting point before the next WOFOST daily step. Rain and other daily fluxes can make the exported end-of-day value slightly exceed that cap. |
+| `nitrogen_deficit` | The severity fraction is removed from initial available nitrogen at planting and the condition lasts for the full campaign. |
+| `stand_loss` | The severity fraction is treated as bare area. WOFOST simulates the surviving crop area, then LAI, biomass, storage-organ mass, and crop-N amounts are converted to whole-zone averages. |
+
+`start_day` is zero-based relative to each zone's planting date. The onset and
+inclusive end date are resolved and written to the impact output. Severity is
+a fraction greater than zero and less than one. Nitrogen deficit and stand
+loss currently start at planting and last all 200 campaign days; this keeps
+their simple initial-condition representation honest.
+
+Run Phase 2 from the repository root with:
+
+```powershell
+C:\Users\layde\anaconda3\Scripts\conda.exe run -n py3_pcse python -m src.simulation.run_phase2 --config config/phase2.yaml
+```
+
+Existing results remain protected unless replacement is explicit:
+
+```powershell
+C:\Users\layde\anaconda3\Scripts\conda.exe run -n py3_pcse python -m src.simulation.run_phase2 --config config/phase2.yaml --overwrite
+```
+
+Generated files are written to the ignored `outputs/phase2/` directory:
+
+- `daily_truth.csv`: baseline and stressed daily truth, including assigned and
+  currently active event IDs;
+- `zone_summary.csv`: paired terminal results for all 25 zones;
+- `stress_impacts.csv`: configured onset, footprint and severity plus LAI and
+  `TWSO` differences for every affected zone;
+- `stress_trajectories.png`: baseline-versus-stressed LAI by event type; and
+- `yield_impact_heatmap.png`: the zone-level percentage loss in the dry
+  storage-organ biomass proxy.
+
+These are deliberately strong synthetic perturbations for pipeline testing,
+not calibrated estimates of real drought, nitrogen loss, or plant mortality.
+Phase 2 does not simulate sensors, drone missions, human scouting, detection
+logic, diagnosis, interventions, or economics.

@@ -1,0 +1,7 @@
+event_id,stress_type,zone_id,start_day,duration_days,severity
+WATER_01,water_deficit,Z_R2_C3,45,21,0.85
+WATER_01,water_deficit,Z_R2_C4,45,21,0.85
+NITROGEN_01,nitrogen_deficit,Z_R3_C4,0,200,0.65
+NITROGEN_01,nitrogen_deficit,Z_R3_C5,0,200,0.65
+STAND_01,stand_loss,Z_R4_C2,0,200,0.50
+STAND_01,stand_loss,Z_R4_C3,0,200,0.50

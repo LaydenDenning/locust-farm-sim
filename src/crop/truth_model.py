@@ -6,12 +6,13 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 import pandas as pd
 
 if TYPE_CHECKING:
     from src.farm import FieldZone, Phase1Config, SoilProfile
+    from src.simulation.stress import StressEvent
 
 
 MODEL_NAME = "Wofost81_NWLP_CWB_CNB"
@@ -122,16 +123,33 @@ class TruthModel:
             str(self.config.weather.file)
         )
 
-    def run_zone(self, zone: FieldZone, soil_profile: SoilProfile) -> ZoneResult:
+    def run_zone(
+        self,
+        zone: FieldZone,
+        soil_profile: SoilProfile,
+        stress_events: Sequence[StressEvent] = (),
+    ) -> ZoneResult:
         """Run one zone through maturity without writing any output files."""
         planting_date = self.config.calendar.base_sowing_date + timedelta(
             days=zone.planting_offset_days
         )
         self._validate_campaign_dates(planting_date)
+        events = tuple(stress_events)
+        if any(event.zone_id != zone.zone_id for event in events):
+            raise ValueError(
+                f"Zone {zone.zone_id} received a stress event for another zone."
+            )
 
-        tdwi_kg_ha = zone.tdwi_kg_ha
+        stand_fraction = self._initial_multiplier(events, "stand_loss")
+        engine_tdwi_kg_ha = zone.tdwi_kg_ha
+        tdwi_kg_ha = engine_tdwi_kg_ha * stand_fraction
+        initial_n_kg_ha = zone.initial_available_n_kg_ha * self._initial_multiplier(
+            events, "nitrogen_deficit"
+        )
         soil_data = self._build_soil_data(zone, soil_profile)
-        site_data = self._build_site_data(zone, soil_profile)
+        site_data = self._build_site_data(
+            zone, soil_profile, initial_n_kg_ha=initial_n_kg_ha
+        )
 
         # A fresh provider is required because the PCSE engine mutates timer
         # parameters and clears overrides when each crop finishes.
@@ -140,7 +158,10 @@ class TruthModel:
             soildata=soil_data,
             sitedata=site_data,
         )
-        parameters.set_override("TDWI", tdwi_kg_ha)
+        # WOFOST represents a uniform crop stand. A stand-loss event is handled
+        # after the run as the cropped fraction of the zone, while WOFOST
+        # simulates the surviving cropped area at its normal establishment.
+        parameters.set_override("TDWI", engine_tdwi_kg_ha)
 
         engine = self._pcse.Model(
             parameters,
@@ -149,7 +170,7 @@ class TruthModel:
             output_vars=ENGINE_OUTPUT_VARIABLES,
             summary_vars=SUMMARY_VARIABLES,
         )
-        engine.run_till_terminate()
+        self._run_engine(engine, planting_date, soil_profile, events)
 
         raw_daily = engine.get_output()
         raw_summaries = engine.get_summary_output()
@@ -168,10 +189,18 @@ class TruthModel:
             )
 
         metadata = self._zone_metadata(
-            zone, soil_profile, planting_date, tdwi_kg_ha, soil_data, site_data
+            zone,
+            soil_profile,
+            planting_date,
+            tdwi_kg_ha,
+            zone.stand_density_plants_m2 * stand_fraction,
+            soil_data,
+            site_data,
         )
         daily = self._normalize_daily(raw_daily, metadata, zone.zone_id)
         summary = self._normalize_summary(pcse_summary, metadata, planting_date)
+        if stand_fraction < 1.0:
+            self._scale_stand_loss(daily, summary, stand_fraction)
         return ZoneResult(daily=daily, summary=summary)
 
     def _validate_static_inputs(self) -> None:
@@ -231,7 +260,13 @@ class TruthModel:
             "KSUB": float(ksub),
         }
 
-    def _build_site_data(self, zone: FieldZone, soil_profile: SoilProfile) -> Any:
+    def _build_site_data(
+        self,
+        zone: FieldZone,
+        soil_profile: SoilProfile,
+        *,
+        initial_n_kg_ha: float,
+    ) -> Any:
         wav_cm = soil_profile.base_wav_cm
         ssmax_cm = soil_profile.ssmax_cm
         if zone.slow_drainage:
@@ -240,10 +275,92 @@ class TruthModel:
 
         return self._pcse.SiteDataProvider(
             WAV=float(wav_cm),
-            NAVAILI=float(zone.initial_available_n_kg_ha),
+            NAVAILI=float(initial_n_kg_ha),
             CO2=float(self.config.site.co2_ppm),
             SSMAX=float(ssmax_cm),
         )
+
+    @staticmethod
+    def _initial_multiplier(
+        events: Sequence[StressEvent], stress_type: str
+    ) -> float:
+        multiplier = 1.0
+        for event in events:
+            if event.stress_type == stress_type:
+                multiplier *= 1.0 - event.severity
+        return multiplier
+
+    @staticmethod
+    def _run_engine(
+        engine: Any,
+        planting_date: date,
+        soil_profile: SoilProfile,
+        events: Sequence[StressEvent],
+    ) -> None:
+        water_events = tuple(
+            event for event in events if event.stress_type == "water_deficit"
+        )
+        if not water_events:
+            engine.run_till_terminate()
+            return
+
+        while not engine.flag_terminate:
+            next_day = engine.day + timedelta(days=1)
+            active = [
+                event
+                for event in water_events
+                if event.is_active(next_day, planting_date)
+            ]
+            if active:
+                target_sm = min(
+                    soil_profile.smfcf
+                    - event.severity * (soil_profile.smfcf - soil_profile.smw)
+                    for event in active
+                )
+                current_sm = engine.get_variable("SM")
+                if current_sm is None:
+                    raise RuntimeError("Unable to read SM for water-stress injection.")
+                if current_sm > target_sm:
+                    increments = engine.set_variable("SM", target_sm)
+                    if "SM" not in increments:
+                        raise RuntimeError(
+                            "The configured PCSE water balance cannot set SM."
+                        )
+            engine.run(1)
+
+    @staticmethod
+    def _scale_stand_loss(
+        daily: pd.DataFrame, summary: dict[str, object], stand_fraction: float
+    ) -> None:
+        """Convert the uniform crop run to zone averages with explicit gaps."""
+
+        for variable in (
+            "LAI",
+            "TAGP",
+            "WLV",
+            "WST",
+            "WRT",
+            "WSO",
+            "NamountSO",
+            "NamountLV",
+            "NamountST",
+            "NamountRT",
+            "NuptakeTotal",
+        ):
+            daily[variable] = daily[variable] * stand_fraction
+        for variable in (
+            "LAIMAX",
+            "TAGP",
+            "TWSO",
+            "TWLV",
+            "TWST",
+            "TWRT",
+            "NuptakeTotal",
+            "NamountSO",
+        ):
+            value = summary.get(variable)
+            if value is not None:
+                summary[variable] = float(value) * stand_fraction
 
     def _build_agromanagement(self, planting_date: date) -> list[dict[date, object]]:
         crop_calendar = {
@@ -271,6 +388,7 @@ class TruthModel:
         soil_profile: SoilProfile,
         planting_date: date,
         tdwi_kg_ha: float,
+        stand_density_plants_m2: float,
         soil_data: dict[str, float],
         site_data: Any,
     ) -> dict[str, object]:
@@ -285,8 +403,8 @@ class TruthModel:
             "soil_profile": zone.soil_profile,
             "planting_date": planting_date,
             "planting_offset_days": zone.planting_offset_days,
-            "initial_available_n_kg_ha": zone.initial_available_n_kg_ha,
-            "stand_density_plants_m2": zone.stand_density_plants_m2,
+            "initial_available_n_kg_ha": site_data["NAVAILI"],
+            "stand_density_plants_m2": stand_density_plants_m2,
             "slow_drainage": zone.slow_drainage,
             "tdwi_kg_ha": tdwi_kg_ha,
             "initial_available_water_cm": site_data["WAV"],

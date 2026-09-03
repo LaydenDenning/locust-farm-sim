@@ -1,0 +1,1 @@
+Ask me if any more explanation/information is needed. Make these changes, keeping the code as simple as possible. Do not change any files besides the ones neccessary to make these changes. Do not make any changes without asking me first.
