@@ -4,6 +4,7 @@ channels:
 dependencies:
   - requests
   - python=3.10
+  - pip
   - sqlalchemy[version='<2.0']
   - ipython
   - jupyter
@@ -15,4 +16,3 @@ dependencies:
   - sphinx_rtd_theme
   - pyyaml
   - matplotlib
-prefix: /home/layden/miniconda3/envs/py3_pcse

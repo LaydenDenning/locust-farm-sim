@@ -1,0 +1,82 @@
+# Reproducible Phase 1 spatial ground-truth farm configuration.
+# Relative input/output paths are resolved from project_root.
+project_root: ..
+zones_file: data/phase1/zones.csv
+
+field:
+  width_m: 800
+  height_m: 800
+  rows: 5
+  columns: 5
+
+crop:
+  parameter_directory: data/crop_parameters/wofost81
+  crop_name: maize
+  variety_name: Grain_maize_201
+  model_name: Wofost81_NWLP_CWB_CNB
+
+weather:
+  file: data/weather/ames_2022.csv
+  latitude: 42.03
+  longitude: -93.63
+  start_date: 2022-01-01
+  end_date: 2022-12-31
+
+calendar:
+  base_sowing_date: 2022-05-01
+  crop_start_type: sowing
+  crop_end_type: maturity
+  max_duration_days: 200
+
+site:
+  co2_ppm: 420
+
+# These are synthetic low/reference/high water-holding profiles for testing;
+# they are not validated USDA soil textures.
+soil_profiles:
+  low:
+    smw: 0.07
+    smfcf: 0.22
+    sm0: 0.38
+    rdmsol_cm: 100
+    crairc: 0.08
+    k0_cm_day: 15
+    sope_cm_day: 15
+    ksub_cm_day: 15
+    base_wav_cm: 10
+  reference:
+    smw: 0.10
+    smfcf: 0.30
+    sm0: 0.40
+    rdmsol_cm: 120
+    crairc: 0.06
+    k0_cm_day: 10
+    sope_cm_day: 10
+    ksub_cm_day: 10
+    base_wav_cm: 16
+  high:
+    smw: 0.16
+    smfcf: 0.36
+    sm0: 0.48
+    rdmsol_cm: 120
+    crairc: 0.06
+    k0_cm_day: 5
+    sope_cm_day: 4
+    ksub_cm_day: 4
+    base_wav_cm: 22
+
+# Overrides applied only to zones marked slow_drainage in zones.csv.
+slow_drainage:
+  sope_cm_day: 2
+  ksub_cm_day: 2
+  ssmax_cm: 3
+  wav_addition_cm: 4
+
+output:
+  directory: outputs/phase1
+  daily_truth_filename: daily_truth.csv
+  zone_summary_filename: zone_summary.csv
+  lai_plot_filename: lai_trajectories.png
+  soil_moisture_plot_filename: soil_moisture_trajectories.png
+  nitrogen_plot_filename: nitrogen_trajectories.png
+  yield_heatmap_filename: final_yield_heatmap.png

@@ -1,29 +1,148 @@
 # Crop Monitoring Drone Farm Simulation
 
-Simulation environment for evaluating the value of UAV-based crop monitoring
-using PCSE and WOFOST.
+This repository is building a reproducible crop-simulation baseline for later
+comparison of conventional scouting and UAV-assisted crop monitoring.
 
-## Objective
+Phase 1 is deliberately narrower than that eventual comparison: it creates a
+spatial ground-truth farm with coherent synthetic crop trajectories. It does
+not yet simulate a drone, scouting observations, management decisions,
+economics, or evidence of drone value.
 
-The project compares conventional crop scouting against UAV-assisted crop
-monitoring using simulated crop ground truth.
+## Phase 1 model
 
-Initial development focuses on generating spatially heterogeneous crop
-conditions using WOFOST/PCSE.
+The field is an 800 m by 800 m square divided into 25 contiguous 160 m by
+160 m zones. Each zone runs a fresh PCSE 6.0.13
+`Wofost81_NWLP_CWB_CNB` engine using:
 
-## Simulation Architecture
+- WOFOST 8.1 `maize` / `Grain_maize_201` crop parameters;
+- the classic water balance and classic soil-nitrogen balance;
+- a base sowing date of 2022-05-01 and a 200-day maximum duration;
+- 420 ppm atmospheric CO2;
+- fixed 2022 weather for Ames, Iowa (42.03 N, 93.63 W); and
+- no irrigation, fertilizer events, or injected stress events.
 
-1. WOFOST/PCSE generates crop ground truth
-2. Farm is divided into spatial management zones
-3. Crop stresses are introduced into selected zones
-4. Conventional scouting is simulated
-5. RGB/NIR UAV observations are simulated
-6. Monitoring strategies are compared
-7. Management and economic impacts are evaluated
+The tracked `maize.yaml` originated in the
+[WOFOST crop-parameter repository](https://github.com/ajwdewit/WOFOST_crop_parameters)
+and declares parameter-file version 1.0.0 (metadata date 2022-02-13). The
+local `crops.yaml` pins maize as the only available crop so normal runs do not
+depend on a changing remote parameter repository.
 
-## Setup
+The official WOFOST 8.1 crop catalog excludes maize because the legacy
+temperate-maize set lacks 13 inputs required by the final WOFOST 8.1 model
+interface. The local `temperate_maize` block therefore includes a clearly
+marked compatibility section: `AMAX_REF` is derived from its existing
+`AMAXTB`; two assimilation coefficients use the only values present in the
+file; the remaining nitrogen-stress and reallocation defaults match the same
+file's tropical-maize block. Reallocation is disabled before maturity. These
+values make `Grain_maize_201` operational, but they are synthetic and have not
+been calibrated for central Iowa.
 
-Create the Conda environment:
+The three soil profiles are synthetic low-, reference-, and high-water-holding
+profiles. They are not USDA texture classifications or field-calibrated soils.
+Zone differences are explicit in `data/phase1/zones.csv`: soil profile,
+planting offset, initial available nitrogen, stand density, and a central
+slow-drainage flag. Stand density is represented by the establishment proxy
+`TDWI = 50 * stand_density / 8` kg/ha.
 
-```bash
-conda env create -f environment.yml
+## Setup on this Windows machine
+
+Create the pinned environment without changing the PowerShell profile:
+
+```powershell
+C:\Users\layde\anaconda3\Scripts\conda.exe env create -f environment.yml
+```
+
+PCSE creates runtime settings, logs, caches, and `pcse.db` under
+`C:\Users\layde\.pcse` on first import. Confirm the installed versions and run
+PCSE's built-in tests with:
+
+```powershell
+C:\Users\layde\anaconda3\Scripts\conda.exe run -n py3_pcse python -c "import sys, pcse; print(sys.version); print(pcse.__version__); pcse.test()"
+```
+
+## Run Phase 1
+
+From the repository root:
+
+```powershell
+C:\Users\layde\anaconda3\Scripts\conda.exe run -n py3_pcse python -m src.simulation.run_phase1 --config config/phase1.yaml
+```
+
+The command validates all configuration, zone geometry, crop inputs, and
+weather coverage before starting the first zone. It runs the 25 zones
+sequentially with fresh mutable model state and writes results only after every
+zone succeeds. Existing result files are protected; use `--overwrite` only
+when replacing them is intentional:
+
+```powershell
+C:\Users\layde\anaconda3\Scripts\conda.exe run -n py3_pcse python -m src.simulation.run_phase1 --config config/phase1.yaml --overwrite
+```
+
+## Inputs and units
+
+| Input | Unit or meaning |
+|---|---|
+| Zone geometry | metres |
+| `SMW`, `SMFCF`, `SM0` | volumetric soil-water fraction, cm3/cm3 |
+| `RDMSOL` | cm |
+| `K0`, `SOPE`, `KSUB` | cm/day |
+| `WAV` | cm water in the potentially rooted zone |
+| Initial available N (`NAVAILI`) | kg N/ha |
+| Stand density | plants/m2 |
+| `TDWI` | kg dry matter/ha |
+| `CO2` | ppm |
+| Weather `IRRAD` | kJ/m2/day in the CSV; converted by PCSE |
+| Weather `TMIN`, `TMAX` | degrees C |
+| Weather `VAP` | kPa |
+| Weather `WIND` | m/s |
+| Weather `RAIN` | mm/day |
+| Weather `SNOWDEPTH` | cm |
+
+The weather file header records its NASA POWER provenance, coordinates,
+retrieval date, and units. Normal simulations use only this local CSV through
+`CSVWeatherDataProvider`; they do not retrieve weather from the internet. The
+small provenance utility `scripts/fetch_phase1_weather.py` records the exact
+NASA POWER variables and unit conversions used to create the pinned file; it
+is not called by a normal simulation.
+
+## Outputs
+
+Generated files are written to the ignored `outputs/phase1/` directory:
+
+- `daily_truth.csv`: one unique `(zone_id, date)` row with zone metadata,
+  `crop_active`, crop development and organ biomass, soil moisture, available
+  nitrogen, nitrogen nutrition index, organ nitrogen amounts, and cumulative
+  crop N uptake;
+- `zone_summary.csv`: crop-calendar dates, maximum LAI, terminal storage-organ
+  biomass (`TWSO`), total above-ground biomass, and total N uptake by zone;
+- `lai_trajectories.png`;
+- `soil_moisture_trajectories.png`;
+- `nitrogen_trajectories.png`; and
+- `final_yield_heatmap.png`.
+
+`TWSO` is a dry storage-organ biomass proxy. Phase 1 does not convert it to
+commercial grain yield, revenue, or avoided loss.
+
+PCSE 6.0.13's WOFOST 8.1 nitrogen module does not publish `NNI` directly. The
+export derives it from simulated leaf/stem biomass and N amounts using the same
+critical-versus-residual concentration formula and 0.001-to-1 bounds used by
+PCSE's standard NPK-stress implementation.
+
+## Tests
+
+Run the standard-library test suite with:
+
+```powershell
+C:\Users\layde\anaconda3\Scripts\conda.exe run -n py3_pcse python -m unittest discover -s tests -v
+```
+
+The tests cover input validation, field coverage, a reference-zone model run,
+25-zone invariants, controlled input comparisons, deterministic reruns, and
+CSV round trips.
+
+## Interpretation boundary
+
+Phase 1 outputs are plausible, deterministic synthetic spatial trajectories.
+They are a ground-truth test bed, not field-calibrated agronomic predictions
+and not proof that a monitoring drone creates value. Stronger agronomic or
+economic claims require field observations and expert review in later phases.

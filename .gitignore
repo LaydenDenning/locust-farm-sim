@@ -39,6 +39,7 @@ outputs/
 tmp/
 temp/
 cache/
+/data/crop_parameters/wofost81/YAMLCropDataProvider.pkl
 
 # Python testing
 .pytest_cache/

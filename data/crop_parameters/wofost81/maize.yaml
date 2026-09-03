@@ -965,6 +965,73 @@ CropParameters:
              - 7.4
              - Maximum rate of daily potassium uptake
              - ['kg.ha-1.d-1']
+            #
+            # LOCAL WOFOST 8.1 COMPATIBILITY PARAMETERS
+            #
+            # Grain_maize_201 predates the final WOFOST 8.1 crop interface.
+            # These explicit synthetic defaults make the temperate-maize
+            # ecotype runnable without changing its calibrated phenology,
+            # partitioning, or organ parameters. AMAX_REF is the maximum of
+            # this ecotype's AMAXTB. AMAX_SLP and AMAX_LNB use the only values
+            # provided in this file (GenericC3). The other values match the
+            # file's WOFOST 8.1-compatible tropical-maize ecotype;
+            # REALLOC_DVS=3 disables reallocation before maturity (DVS=2).
+            AMAX_REF:
+            - 70.0
+            - synthetic WOFOST 8.1 maximum leaf CO2 assimilation reference
+            - ['kg.ha-1.hr-1']
+            AMAX_SLP:
+            - 3.24
+            - synthetic slope of AMAX response to specific leaf nitrogen
+            - ['kg CO2 ha-1 h-1 (kg N m-2)-1']
+            AMAX_LNB:
+            - 0.0
+            - synthetic lower specific leaf nitrogen threshold for assimilation
+            - ['kg N ha-1']
+            KN:
+            - 0.4
+            - synthetic extinction coefficient of leaf N concentration
+            - ['-']
+            DVS_N_TRANSL:
+            - 0.8
+            - development stage above which N translocation starts
+            - ['-']
+            NSLLV_TB:
+            - [0.0, 1.0,
+               1.1, 1.0,
+               1.5, 1.4,
+               2.0, 1.5,
+               2.5, 1.5]
+            - synthetic leaf senescence response to N stress
+            - ['-']
+            RGRLAI_MIN:
+            - 0.004
+            - minimum relative LAI growth rate under maximum N stress
+            - ['ha.ha-1.d-1']
+            REALLOC_DVS:
+            - 3.0
+            - DVS threshold above maturity, disabling biomass reallocation
+            - ['-']
+            REALLOC_STEM_FRACTION:
+            - 0.2
+            - maximum fraction of stem biomass available for reallocation
+            - ['kg.kg-1']
+            REALLOC_LEAF_FRACTION:
+            - 0.0
+            - maximum fraction of leaf biomass available for reallocation
+            - ['kg.kg-1']
+            REALLOC_STEM_RATE:
+            - 0.0415
+            - relative rate of stem biomass reallocation
+            - ['d-1']
+            REALLOC_LEAF_RATE:
+            - 0.0
+            - relative rate of leaf biomass reallocation
+            - ['d-1']
+            REALLOC_EFFICIENCY:
+            - 0.95
+            - conversion efficiency of reallocated biomass
+            - ['kg.kg-1']
     Varieties:
         Maize_VanHeemst_1988:
             <<: *tropical_maize
