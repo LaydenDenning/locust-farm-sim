@@ -1,0 +1,15 @@
+# Phase 8 human confirmation of drone and scout anomaly flags.
+phase7_config: phase7.yaml
+
+confirmation:
+  seed: 20220801
+  drone_delay_days: 1
+  scout_delay_days: 0
+  sensitivity: 0.95
+  specificity: 0.98
+
+output:
+  directory: ../outputs/phase8
+  confirmation_events_filename: confirmation_events.csv
+  confirmation_evaluation_filename: confirmation_evaluation.csv
+  issue_summary_filename: issue_confirmation_summary.csv

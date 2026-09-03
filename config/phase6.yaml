@@ -1,0 +1,27 @@
+# Phase 6 conventional scouting along a fixed W-shaped sample route.
+phase4_config: phase4.yaml
+
+scout:
+  route_zone_ids:
+    - Z_R5_C1
+    - Z_R3_C1
+    - Z_R1_C2
+    - Z_R3_C2
+    - Z_R5_C3
+    - Z_R3_C3
+    - Z_R1_C4
+    - Z_R3_C4
+    - Z_R5_C5
+  seed: 20220601
+  healthy_visual_baseline: 0.05
+  visibility_sensitivity: 0.85
+  visual_noise_std: 0.08
+  missing_probability: 0.03
+  inspection_minutes_per_zone: 4
+  travel_minutes_between_zones: 3
+  missed_days: []
+
+output:
+  directory: ../outputs/phase6
+  observations_filename: scout_observations.csv
+  survey_summary_filename: survey_summary.csv

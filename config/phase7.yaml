@@ -1,0 +1,14 @@
+# Phase 7 truth-separated comparison of drone and conventional scouting.
+phase5_config: phase5.yaml
+phase6_config: phase6.yaml
+
+scout_detection:
+  anomaly_threshold: 0.30
+  maximum_uncertainty: 0.30
+  allowed_quality_flags: [good]
+
+output:
+  directory: ../outputs/phase7
+  method_detections_filename: method_detections.csv
+  detection_evaluation_filename: detection_evaluation.csv
+  issue_summary_filename: issue_detection_summary.csv
