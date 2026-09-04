@@ -1,0 +1,43 @@
+farm_config: ../phase1.yaml
+crop_profile: ../profiles/crops/maize.yaml
+scenario_profile: ../profiles/scenarios/default.yaml
+intervention_profile: ../profiles/interventions/default.yaml
+economics_profile: ../profiles/economics/default.yaml
+scenario_count: 100
+seed: 20221101
+compatibility_phase11_config: null
+reference_method_id: ground_weekly
+methods:
+  - id: drone_3_day
+    profile: ../profiles/methods/drone_mavic4_rgb_nir.yaml
+    schedule: {start_day: 35, end_day: 98, interval_days: 3}
+    route: {pattern: parallel_sweep, orientation: east_west, target_zone_ids: []}
+    reliability: {missed_probability: 0.10, forced_missed_days: []}
+    confirmation_delay_days: 1
+  - id: drone_7_day
+    profile: ../profiles/methods/drone_mavic4_rgb_nir.yaml
+    schedule: {start_day: 35, end_day: 98, interval_days: 7}
+    route: {pattern: parallel_sweep, orientation: east_west, target_zone_ids: []}
+    reliability: {missed_probability: 0.10, forced_missed_days: []}
+    confirmation_delay_days: 1
+  - id: drone_14_day
+    profile: ../profiles/methods/drone_mavic4_rgb_nir.yaml
+    schedule: {start_day: 35, end_day: 98, interval_days: 14}
+    route: {pattern: parallel_sweep, orientation: east_west, target_zone_ids: []}
+    reliability: {missed_probability: 0.10, forced_missed_days: []}
+    confirmation_delay_days: 1
+  - id: ground_weekly
+    profile: ../profiles/methods/ground_scout.yaml
+    schedule: {start_day: 35, end_day: 98, interval_days: 7}
+    route:
+      pattern: explicit
+      zone_ids: [Z_R5_C1, Z_R3_C1, Z_R1_C2, Z_R3_C2, Z_R5_C3, Z_R3_C3, Z_R1_C4, Z_R3_C4, Z_R5_C5]
+    reliability: {missed_probability: 0.05, forced_missed_days: []}
+    confirmation_delay_days: 0
+output:
+  directory: ../../outputs/experiments/drone_frequency
+  method_results_filename: scenario_method_results.csv
+  pairwise_results_filename: pairwise_results.csv
+  distribution_summary_filename: distribution_summary.csv
+  sensitivity_filename: sensitivity.csv
+  manifest_filename: run_manifest.json

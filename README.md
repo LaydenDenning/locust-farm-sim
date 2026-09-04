@@ -231,3 +231,32 @@ field evidence.
 Existing plots are protected. Pass `--overwrite` to replace them, or use
 `--input-directory` and `--output-directory` to analyze or write another
 directory.
+
+## Modular monitoring experiments
+
+The additive experiment runner compares any number of named monitoring
+variants against identical seeded crop-issue scenarios while leaving the
+Phase 1-11 commands and outputs unchanged. Run the current weekly drone and
+ground-scout baseline with:
+
+```powershell
+C:\Users\layde\anaconda3\Scripts\conda.exe run -n py3_pcse python -m src.simulation.run_experiment --config config/experiments/baseline.yaml
+```
+
+`config/experiments/drone_frequency.yaml` compares 3-, 7-, and 14-day drone
+schedules with weekly ground scouting. `four_method_comparison.yaml` adds
+synthetic manned-aircraft and Sentinel-2 proxies on a 10 m analysis grid. The
+aircraft and satellite assumptions are sensitivity inputs, not calibrated
+vendor performance or prices.
+
+An experiment references independent crop, scenario, intervention, economics,
+and method profiles under `config/profiles`. A method variant supplies its own
+schedule, route, missed-survey assumptions, and confirmation delay. Supported
+routes include east-west or north-south aerial sweeps, optional target zones,
+and explicit, W, serpentine, or seeded-sample ground routes.
+
+Each run writes long-form method and pairwise results, distribution summaries,
+sensitivity correlations, an input-hash manifest, and five generic plots. All
+outputs are protected unless `--overwrite` is passed. The results are synthetic
+sensitivity evidence under declared assumptions; they are not field validation,
+commercial ROI, or causal proof.

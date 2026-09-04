@@ -1,0 +1,21 @@
+# Provisional sensitivity assumptions, not treatment guidance.
+water_deficit:
+  response_delay_days: 1
+  efficacy: 0.80
+  cutoff_day: 90
+  cost_per_ha: 35.0
+excess_water:
+  response_delay_days: 2
+  efficacy: 0.65
+  cutoff_day: 90
+  cost_per_ha: 60.0
+nutrient_deficit:
+  response_delay_days: 2
+  efficacy: 0.75
+  cutoff_day: 75
+  cost_per_ha: 55.0
+canopy_damage:
+  response_delay_days: 1
+  efficacy: 0.85
+  cutoff_day: 95
+  cost_per_ha: 45.0

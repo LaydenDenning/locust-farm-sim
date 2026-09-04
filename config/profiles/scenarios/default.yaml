@@ -1,0 +1,15 @@
+no_issue_probability: 0.10
+footprint_zone_count: [1, 4]
+footprint_cell_count: [4, 100]
+onset_day: [15, 75]
+progression_per_day: [0.01, 0.06]
+max_severity: [0.30, 0.90]
+visibility_delay_days: [0, 10]
+visibility_scale: [0.50, 1.00]
+untreated_loss_fraction: [0.10, 0.40]
+efficacy_multiplier: [0.70, 1.15]
+response_delay_days: [0, 3]
+treatment_cost_multiplier: [0.75, 1.25]
+twso_value_multiplier: [0.75, 1.25]
+spatial_footprints: false
+analysis_cell_size_m: 10.0

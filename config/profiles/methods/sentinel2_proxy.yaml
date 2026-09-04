@@ -1,0 +1,21 @@
+# Sentinel-2 geometry is representative; availability, latency, and costs are synthetic.
+kind: satellite
+family: sentinel2
+settings:
+  sensor:
+    name: Sentinel-2 MSI proxy
+    ground_sample_distance_m: 10.0
+    bands: [blue, green, red, nir]
+    processing_delay_days: 1
+  observation:
+    noise_std: 0.10
+    visibility_sensitivity: 0.80
+    cloud_probability: 0.30
+    missing_probability: 0.01
+  detection:
+    anomaly_threshold: 0.30
+    maximum_uncertainty: 0.35
+    allowed_quality_flags: [good]
+  costs:
+    data_cost_per_scene: 0.0
+    processing_cost_per_scene: 5.0

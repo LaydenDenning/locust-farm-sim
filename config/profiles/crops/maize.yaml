@@ -1,0 +1,21 @@
+crop:
+  parameter_directory: ../../../data/crop_parameters/wofost81
+  crop_name: maize
+  variety_name: Grain_maize_201
+  model_name: Wofost81_NWLP_CWB_CNB
+calendar:
+  base_sowing_date: 2022-05-01
+  crop_start_type: sowing
+  crop_end_type: maturity
+  max_duration_days: 200
+observation:
+  lai_saturation: 1.5
+  healthy_visual_baseline: 0.05
+  # Synthetic red, green, NIR, and canopy responses; not crop calibration.
+  reflectance_effects:
+    water_deficit: [0.10, -0.12, -0.16, -0.10]
+    excess_water: [0.08, -0.10, -0.12, -0.08]
+    nutrient_deficit: [0.12, -0.15, -0.18, -0.12]
+    canopy_damage: [0.20, -0.18, -0.30, -0.35]
+required_truth_variables: [zone_id, date, crop_active, LAI, NNI, SM, soil_smw, soil_smfcf]
+twso_proxy_value_per_tonne: 200.0

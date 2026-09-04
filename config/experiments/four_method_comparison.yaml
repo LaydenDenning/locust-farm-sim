@@ -1,0 +1,42 @@
+# Aircraft and satellite assumptions are synthetic proxies pending calibration.
+farm_config: ../phase1.yaml
+crop_profile: ../profiles/crops/maize.yaml
+scenario_profile: ../profiles/scenarios/spatial.yaml
+intervention_profile: ../profiles/interventions/default.yaml
+economics_profile: ../profiles/economics/default.yaml
+scenario_count: 100
+seed: 20221101
+compatibility_phase11_config: null
+reference_method_id: ground_weekly
+methods:
+  - id: drone_weekly
+    profile: ../profiles/methods/drone_mavic4_rgb_nir.yaml
+    schedule: {start_day: 35, end_day: 98, interval_days: 7}
+    route: {pattern: parallel_sweep, orientation: east_west, target_zone_ids: []}
+    reliability: {missed_probability: 0.10, forced_missed_days: []}
+    confirmation_delay_days: 1
+  - id: ground_weekly
+    profile: ../profiles/methods/ground_scout.yaml
+    schedule: {start_day: 35, end_day: 98, interval_days: 7}
+    route: {pattern: w, samples_per_leg: 3}
+    reliability: {missed_probability: 0.05, forced_missed_days: []}
+    confirmation_delay_days: 0
+  - id: aircraft_14_day
+    profile: ../profiles/methods/manned_aircraft_proxy.yaml
+    schedule: {start_day: 35, end_day: 98, interval_days: 14}
+    route: {pattern: parallel_sweep, orientation: north_south, target_zone_ids: []}
+    reliability: {missed_probability: 0.10, forced_missed_days: []}
+    confirmation_delay_days: 1
+  - id: sentinel2_5_day
+    profile: ../profiles/methods/sentinel2_proxy.yaml
+    schedule: {start_day: 35, end_day: 98, interval_days: 5}
+    route: {}
+    reliability: {missed_probability: 0.02, forced_missed_days: []}
+    confirmation_delay_days: 1
+output:
+  directory: ../../outputs/experiments/four_method
+  method_results_filename: scenario_method_results.csv
+  pairwise_results_filename: pairwise_results.csv
+  distribution_summary_filename: distribution_summary.csv
+  sensitivity_filename: sensitivity.csv
+  manifest_filename: run_manifest.json

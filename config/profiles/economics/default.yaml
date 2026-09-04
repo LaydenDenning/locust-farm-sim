@@ -1,0 +1,5 @@
+currency: USD
+confirmation_cost_per_visit: 20.0
+false_positive_action_cost_per_ha: 45.0
+confirmation_sensitivity: 0.95
+confirmation_specificity: 0.98

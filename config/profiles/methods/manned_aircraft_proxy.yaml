@@ -1,0 +1,32 @@
+# Synthetic airborne-imagery proxy. Calibrate platform and vendor costs before use.
+kind: manned_aircraft
+family: manned_aircraft
+settings:
+  aircraft:
+    name: Generic agricultural imaging aircraft proxy
+    mapping_speed_m_s: 50.0
+    usable_endurance_minutes: 180.0
+    altitude_m: 1000.0
+    ground_sample_distance_m: 0.50
+    forward_overlap: 0.70
+    side_overlap: 0.60
+    turn_overhead_seconds: 30.0
+    takeoff_landing_overhead_seconds: 900.0
+    battery_change_seconds: 0.0
+    processing_delay_days: 1
+  cameras:
+    - {name: Generic airborne RGB, channel: rgb, horizontal_fov_deg: 55.0, vertical_fov_deg: 42.0, minimum_capture_interval_seconds: 1.0}
+    - {name: Generic airborne NIR, channel: nir, horizontal_fov_deg: 50.0, vertical_fov_deg: 40.0, minimum_capture_interval_seconds: 1.0}
+  observation:
+    noise_std: 0.06
+    visibility_sensitivity: 0.95
+    cloud_probability: 0.10
+    missing_probability: 0.01
+  detection:
+    anomaly_threshold: 0.30
+    maximum_uncertainty: 0.25
+    allowed_quality_flags: [good]
+  costs:
+    mobilization_cost: 500.0
+    flight_cost_per_hour: 350.0
+    processing_cost_per_ha: 0.50

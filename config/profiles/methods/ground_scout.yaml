@@ -1,0 +1,16 @@
+kind: ground_scout
+family: ground_scout
+settings:
+  observation:
+    noise_std: 0.08
+    visibility_sensitivity: 0.85
+    cloud_probability: 0.0
+    missing_probability: 0.03
+  detection:
+    anomaly_threshold: 0.30
+    maximum_uncertainty: 0.30
+    allowed_quality_flags: [good]
+  costs:
+    inspection_minutes_per_zone: 4.0
+    travel_minutes_between_zones: 3.0
+    labor_cost_per_hour: 30.0
