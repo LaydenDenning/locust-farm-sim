@@ -199,3 +199,35 @@ These are deliberately strong synthetic perturbations for pipeline testing,
 not calibrated estimates of real drought, nitrogen loss, or plant mortality.
 Phase 2 does not simulate sensors, drone missions, human scouting, detection
 logic, diagnosis, interventions, or economics.
+
+## Analyze Phase 11 results
+
+After generating the Phase 11 CSV files, create summary plots from the
+repository root with:
+
+```powershell
+C:\Users\layde\anaconda3\Scripts\conda.exe run -n py3_pcse python -m src.simulation.analyze_phase11
+```
+
+The command reads `scenario_results.csv` and `sensitivity.csv` from
+`outputs/phase11/` and writes these plots beside them:
+
+- `strategy_net_benefits.png`: crop loss avoided and financial net benefit in
+  separate panels, with medians, 5th–95th percentile ranges, and positive
+  outcome rates;
+- `strategy_comparison.png`: paired drone-versus-scout net benefit with the
+  no-intervention baseline, comparison line, and outcome regions labeled;
+- `drone_advantage.png`: negative outcomes favoring scouting and positive
+  outcomes favoring the drone shown in different colors; and
+- `sensitivity_correlations.png`: ranked parameter associations with clear
+  direction labels and a reminder that correlation is not causation.
+
+The financial plots define net benefit relative to no intervention after
+configured operating and treatment costs. They are separate from avoided crop
+loss: a strategy can protect crop while still having negative net benefit.
+All plots describe synthetic scenarios under the configured assumptions, not
+field evidence.
+
+Existing plots are protected. Pass `--overwrite` to replace them, or use
+`--input-directory` and `--output-directory` to analyze or write another
+directory.
